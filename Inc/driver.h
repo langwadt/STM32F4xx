@@ -169,6 +169,8 @@
   #include "mini_blackpill_map.h"
 #elif defined(BOARD_MY_MACHINE)
   #include "my_machine_map.h"
+#elif defined(BOARD_DIYMORE_MACHINE)
+  #include "diymore407_map.h"
 #else // default board
   #include "generic_map.h"
 #endif
