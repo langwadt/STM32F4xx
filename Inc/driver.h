@@ -89,6 +89,8 @@
 
 #define CNC_BOOSTERPACK     0
 
+#define SPINDLE_MM420_FIXEDFREQ 1
+
 // Define GPIO output mode options
 
 #define GPIO_SHIFT0   0

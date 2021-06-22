@@ -243,6 +243,17 @@ static output_signal_t outputpin[] = {
 #ifdef SPINDLE_DIRECTION_PIN
     { .id = Output_SpindleDir,      .port = SPINDLE_DIRECTION_PORT,     .pin = SPINDLE_DIRECTION_PIN,   .group = PinGroup_SpindleControl },
 #endif
+
+#ifdef SPINDLE_B0_PIN
+    { .id = Output_SpindleB0,      .port = SPINDLE_PORT,     .pin = SPINDLE_B0_PIN,   .group = PinGroup_SpindleControl },
+#endif
+#ifdef SPINDLE_B1_PIN
+    { .id = Output_SpindleB1,      .port = SPINDLE_PORT,     .pin = SPINDLE_B1_PIN,   .group = PinGroup_SpindleControl },
+#endif
+#ifdef SPINDLE_B2_PIN
+    { .id = Output_SpindleB2,      .port = SPINDLE_PORT,     .pin = SPINDLE_B2_PIN,   .group = PinGroup_SpindleControl },
+#endif
+
 #endif
     { .id = Output_CoolantMist,     .port = COOLANT_FLOOD_PORT,         .pin = COOLANT_FLOOD_PIN,       .group = PinGroup_Coolant },
 #ifdef COOLANT_MIST_PIN
@@ -765,7 +776,7 @@ static control_signals_t systemGetState (void)
 #endif
     signals.feed_hold = BITBAND_PERI(FEED_HOLD_PORT->IDR, FEED_HOLD_PIN);
     signals.cycle_start = BITBAND_PERI(CYCLE_START_PORT->IDR, CYCLE_START_PIN);
-  #ifdef SAFETY_DOOR_PIN
+  #ifdef SAFETY_DOOR_ENABLE // LLC
     signals.safety_door_ajar = BITBAND_PERI(SAFETY_DOOR_PORT->IDR, SAFETY_DOOR_PIN);
   #endif
 #elif CONTROL_INMODE == GPIO_MAP
@@ -826,11 +837,26 @@ probe_state_t probeGetState (void)
 
 // Static spindle (off, on cw & on ccw)
 
+static uint32_t spindle_val=0;
+
 inline static void spindle_off (void)
 {
 #ifdef SPINDLE_ENABLE_PIN
     BITBAND_PERI(SPINDLE_ENABLE_PORT->ODR, SPINDLE_ENABLE_PIN) = settings.spindle.invert.on;
 #endif
+
+#ifdef SPINDLE_B0_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B0_PIN) = 0;
+#endif
+#ifdef SPINDLE_B1_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B1_PIN) = 0;
+#endif
+#ifdef SPINDLE_B2_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B2_PIN) = 0;
+#endif
+
+    spindle_val=0;
+
 }
 
 inline static void spindle_on (void)
@@ -838,6 +864,17 @@ inline static void spindle_on (void)
 #ifdef SPINDLE_ENABLE_PIN
     BITBAND_PERI(SPINDLE_ENABLE_PORT->ODR, SPINDLE_ENABLE_PIN) = !settings.spindle.invert.on;
 #endif
+
+#ifdef SPINDLE_B0_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B0_PIN) = spindle_val & 1;
+#endif
+#ifdef SPINDLE_B1_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B1_PIN) = (spindle_val & 2)>>1;
+#endif
+#ifdef SPINDLE_B2_PIN
+    BITBAND_PERI(SPINDLE_PORT->ODR, SPINDLE_B2_PIN) = (spindle_val & 4)>>2;
+#endif
+
 #ifdef SPINDLE_SYNC_ENABLE
     spindleDataReset();
 #endif
@@ -858,6 +895,10 @@ static void spindleSetState (spindle_state_t state, float rpm)
         spindle_off();
     else {
         spindle_dir(state.ccw);
+
+        spindle_val=(rpm/24000)*7;
+        if(spindle_val>7) spindle_val = 7;
+
         spindle_on();
     }
 }
@@ -1366,6 +1407,8 @@ void settings_changed (settings_t *settings)
         } while(i);
 
         __HAL_GPIO_EXTI_CLEAR_IT(DRIVER_IRQMASK);
+
+
 
 #if DRIVER_IRQMASK & (1<<0)
         HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 2);

@@ -52,7 +52,7 @@
 #define EEPROM_ENABLE   0 // Disabled for now for BlackPill - pin differences... // Only change if BoosterPack does not have EEPROM mounted
 #define X_GANGED        0
 #define X_AUTO_SQUARE   0
-#define Y_GANGED        0
+#define Y_GANGED        1
 #define Y_AUTO_SQUARE   1
 #define Z_GANGED        0
 #define Z_AUTO_SQUARE   0
@@ -83,19 +83,19 @@
 #define Y_DIRECTION_BIT     (1<<Y_DIRECTION_PIN)
 
 #if Y_GANGED || Y_AUTO_SQUARE
- #define Y2_STEP_PIN         9
+ #define Y2_STEP_PIN         10
  #define Y2_STEP_BIT         (1<<Y2_STEP_PIN)
- #define Y2_DIRECTION_PIN    10
+ #define Y2_DIRECTION_PIN    14
  #define Y2_DIRECTION_BIT    (1<<Y2_DIRECTION_PIN)
  #if Y_AUTO_SQUARE
-  #define Y2_LIMIT_PIN       10 // PORT GPIOB Doubling up on Z- Axis Limit Switch as they will never be used at the same time
+  #define Y2_LIMIT_PIN       4
   #define Y2_LIMIT_BIT       (1<<Y2_LIMIT_PIN)
  #endif
 #endif
 
-#define Z_STEP_PIN          10
+#define Z_STEP_PIN          11
 #define Z_STEP_BIT          (1<<Z_STEP_PIN)
-#define Z_DIRECTION_PIN     14
+#define Z_DIRECTION_PIN     15
 #define Z_DIRECTION_BIT     (1<<Z_DIRECTION_PIN)
 
 #if Z_GANGED || Z_AUTO_SQUARE
@@ -111,9 +111,11 @@
 #endif
 
 #if N_AXIS > 3
- #define A_STEP_PIN          6
+ #define A_STEP_PORT         GPIOE
+ #define A_STEP_PIN          13
  #define A_STEP_BIT          (1<<A_STEP_PIN)
- #define A_DIRECTION_PIN     7
+ #define A_DIRECTION_PORT    GPIOE
+ #define A_DIRECTION_PIN     14
  #define A_DIRECTION_BIT     (1<<A_DIRECTION_PIN)
 
   #define STEP_MASK           (X_STEP_BIT|Y_STEP_BIT|Z_STEP_BIT|A_STEP_BIT) // All step bits
@@ -140,18 +142,18 @@
 #define STEPPERS_DISABLE_MASK   STEPPERS_DISABLE_BIT
 
 // Define homing/hard limit switch input pins.
-#define LIMIT_PORT       GPIOB
-#define X_LIMIT_PIN      12
-#define Y_LIMIT_PIN      13
-#define Z_LIMIT_PIN      14
+#define LIMIT_PORT       GPIOE
+#define X_LIMIT_PIN      2
+#define Y_LIMIT_PIN      3
+#define Z_LIMIT_PIN      5
 #define X_LIMIT_BIT      (1<<X_LIMIT_PIN)
 #define Y_LIMIT_BIT      (1<<Y_LIMIT_PIN)
 #define Z_LIMIT_BIT      (1<<Z_LIMIT_PIN)
 #if N_AXIS > 3
 // Not tested, might need to remap due to B15 being mapped to probe
-#define A_LIMIT_PIN      15
+#define A_LIMIT_PIN      6
 #define A_LIMIT_BIT      (1<<A_LIMIT_PIN)
-#define LIMIT_MASK       (X_LIMIT_BIT|Y_LIMIT_BIT|Z_LIMIT_BIT|A_LIMIT_BIT) // All limit bits
+#define LIMIT_MASK       (X_LIMIT_BIT|Y_LIMIT_BIT|Z_LIMIT_BIT|A_LIMIT_BIT|Y2_LIMIT_BIT) // All limit bits
 #else
 #if defined(X2_LIMIT_BIT)
 #define LIMIT_MASK       (X_LIMIT_BIT|X2_LIMIT_BIT|Y_LIMIT_BIT|Z_LIMIT_BIT) // All limit bits
@@ -164,9 +166,20 @@
 #endif
 
 #endif
-#define LIMIT_INMODE GPIO_SHIFT12
-
+#define LIMIT_INMODE GPIO_BITBAND
   // Define spindle enable and spindle direction output pins.
+
+#if SPINDLE_MM420_FIXEDFREQ
+
+#define SPINDLE_PORT        GPIOA
+#define SPINDLE_B0_PIN      1
+#define SPINDLE_B0_BIT      (1<<SPINDLE_B0_PIN)
+#define SPINDLE_B1_PIN      0
+#define SPINDLE_B1_BIT      (1<<SPINDLE_B1_PIN)
+#define SPINDLE_B2_PIN      2
+#define SPINDLE_B2_BIT      (1<<SPINDLE_B2_PIN)
+
+#else
 #define SPINDLE_ENABLE_PORT     GPIOB
 #define SPINDLE_ENABLE_PIN      1
 #define SPINDLE_ENABLE_BIT      (1<<SPINDLE_ENABLE_PIN)
@@ -179,6 +192,10 @@
 #define SPINDLE_PWM_PIN         8
 #define SPINDLE_PWM_BIT         (1<<SPINDLE_PWM_PIN)
 
+#endif
+
+
+
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT      GPIOC
 #define COOLANT_FLOOD_PIN       15
@@ -188,12 +205,12 @@
 #define COOLANT_MIST_BIT        (1<<COOLANT_MIST_PIN)
 
 // Define user-control controls (cycle start, reset, feed hold) input pins.
-#define CONTROL_PORT            GPIOB
-#define RESET_PIN               6
-#define FEED_HOLD_PIN           7
-#define CYCLE_START_PIN         8
-#define SAFETY_DOOR_PIN         9
-#define CONTROL_INMODE          GPIO_SHIFT6
+#define CONTROL_PORT            GPIOE
+#define RESET_PIN               8
+#define FEED_HOLD_PIN           9
+#define CYCLE_START_PIN         10
+#define SAFETY_DOOR_PIN         11
+#define CONTROL_INMODE          GPIO_SHIFT8
 #define RESET_BIT               (1<<RESET_PIN)
 #define FEED_HOLD_BIT           (1<<FEED_HOLD_PIN)
 #define CYCLE_START_BIT         (1<<CYCLE_START_PIN)
@@ -201,8 +218,8 @@
 #define CONTROL_MASK            (RESET_BIT|FEED_HOLD_BIT|CYCLE_START_BIT|SAFETY_DOOR_BIT)
 
 // Define probe switch input pin.
-#define PROBE_PORT              GPIOB
-#define PROBE_PIN               15
+#define PROBE_PORT              GPIOE
+#define PROBE_PIN               7
 #define PROBE_BIT               (1<<PROBE_PIN)
 
 // NOT SUPPORTED
